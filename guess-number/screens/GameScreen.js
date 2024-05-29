@@ -1,4 +1,4 @@
-import { StyleSheet, View, Alert } from 'react-native';
+import { StyleSheet, View, Alert, Text, FlatList } from 'react-native';
 import Title from '../components/ui/Title';
 import { useEffect, useState } from 'react';
 import NumberContainer from '../components/game/NumberContainer';
@@ -6,6 +6,7 @@ import PrimaryButton from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import InstructionText from '../components/ui/InstructionText';
 import { Ionicons } from '@expo/vector-icons';
+import GuessLogItem from '../components/game/GuessLogItem';
 
 let minBoundary = 1;
 let maxBoundary = 100;
@@ -13,12 +14,17 @@ let maxBoundary = 100;
 function GameScreen({ userNumber, onGameOver }) {
   const initialState = generateRandomBetween(1, 100, userNumber);
   const [currentGuess, setCurrentGuess] = useState(initialState);
+  const [rounds, setRounds] = useState([initialState]);
 
   useEffect(() => {
     if (userNumber === currentGuess) {
-      onGameOver();
+      onGameOver(rounds.length);
     }
   }, [userNumber, currentGuess, onGameOver]);
+
+  useEffect(() => {
+    (minBoundary = 1), (maxBoundary = 100);
+  }, []);
 
   function generateRandomBetween(min, max, exclude) {
     const rndNum = Math.floor(Math.random() * (max - min)) + min;
@@ -53,7 +59,10 @@ function GameScreen({ userNumber, onGameOver }) {
       currentGuess,
     );
     setCurrentGuess(newRndNumber);
+    setRounds((currentRounds) => [newRndNumber, ...currentRounds]);
   }
+
+  const roundsLength = rounds.length;
 
   return (
     <View style={styles.screen}>
@@ -74,7 +83,18 @@ function GameScreen({ userNumber, onGameOver }) {
           </View>
         </View>
       </Card>
-      {/* <View>LOG ROUNDS</View> */}
+      <View style={styles.listContainer}>
+        <FlatList
+          data={rounds}
+          renderItem={(itemData) => (
+            <GuessLogItem
+              roundNumber={roundsLength - itemData.index}
+              guess={itemData.item}
+            />
+          )}
+          keyExtractor={(item) => item}
+        />
+      </View>
     </View>
   );
 }
@@ -90,6 +110,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   buttonContainer: {
+    flex: 1,
+  },
+  listContainer: {
+    padding: 16,
     flex: 1,
   },
 });
